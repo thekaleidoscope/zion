@@ -1,0 +1,31 @@
+name: Detect Terraform Changes
+description: Detects changed Terraform directories and modules.
+
+inputs:
+  ENVIRONMENT:
+    description: Target environment (e.g., dev, pre-prod, prod)
+    required: true
+
+outputs:
+  terraform_dirs:
+    description: JSON array of changed Terraform directories
+    value: ${{ steps.filter.outputs.terraform_dirs }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Find Changed Terraform Packages and Modules
+      id: filter
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      run: |
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+        echo "Changed files: $CHANGED_FILES"
+
+        CHANGED_DIRS=$(echo "$CHANGED_FILES" | grep -E "^terraform/.*/${ENVIRONMENT}" | cut -d'/' -f2-4 | sort -u)
+        
+        CHANGED_DIRS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+        echo "Detected Terraform directories: $CHANGED_DIRS_JSON"
+
+        echo "terraform_dirs=$CHANGED_DIRS_JSON" >> $GITHUB_OUTPUT

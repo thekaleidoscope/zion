@@ -1,0 +1,58 @@
+name: Terraform CI Dev - Plan
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'terraform/**/multi-verse-1/dev/**'
+      - 'terraform/**/prime/dev/**'
+      - 'terraform/**/sourcefield/dev/**'
+      - 'terraform/modules/**'
+
+env:
+  ENVIRONMENT: dev
+
+jobs:
+  detect-changes:
+    name: Detect Terraform Changes
+    outputs:
+      matrix: ${{ steps.detect.outputs.terraform_dirs }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Detect Changes
+        id: detect
+        uses: ./.github/actions/detect-terraform-changes
+        with:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+
+  terraform-plan:
+    name: Terraform Plan
+    needs: detect-changes
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.detect-changes.outputs.matrix) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Terraform Init
+        working-directory: terraform/${{ matrix.package }}
+        run: terraform init
+
+      - name: Terraform Plan
+        id: tf-plan
+        working-directory: terraform/${{ matrix.package }}
+        env:
+          PACKAGE_NAME: ${{ matrix.package }}
+        run: |
+          terraform plan -detailed-exitcode -no-color -out tfplan || true
+
+      - name: Publish Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.package }}-${{ github.run_id }}
+          path: terraform/${{ matrix.package }}/tfplan
+          retention-days: 1
