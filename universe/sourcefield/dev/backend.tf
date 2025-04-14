@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket       = "universe"
+    bucket       = "universe-dev"
     region       = "eu-west-1"
-    key          = "multi_verse_1.tfstate"
+    key          = "sourcefield.tfstate"
     use_lockfile = true
   }
 }
