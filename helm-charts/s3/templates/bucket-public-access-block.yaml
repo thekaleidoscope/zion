@@ -1,0 +1,16 @@
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: {{ .Values.serviceName }}-bucket-public-access
+  labels:
+    testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    blockPublicAcls: false
+    blockPublicPolicy: false
+    bucketSelector:
+      matchLabels:
+        testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+  providerConfigRef:
+    name: aws-provider

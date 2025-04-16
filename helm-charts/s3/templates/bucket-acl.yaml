@@ -1,0 +1,13 @@
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketACL
+metadata:
+  name: {{ .Values.serviceName }}-bucket-acl
+spec:
+  forProvider:
+    acl: private
+    region: {{ .Values.region }}
+    bucketSelector:
+      matchLabels:
+        testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+  providerConfigRef:
+    name: aws-provider

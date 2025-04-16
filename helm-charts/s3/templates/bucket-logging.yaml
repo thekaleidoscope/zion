@@ -1,0 +1,18 @@
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketLogging
+metadata:
+  name: {{ .Values.serviceName }}-bucket-logging
+  labels:
+    testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    bucketSelector:
+      matchLabels:
+        testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+    targetBucketSelector:
+      matchLabels:
+        testing.upbound.io/example-name: {{ .Values.serviceName }}-bucket
+    targetPrefix: log/
+  providerConfigRef:
+    name: aws-provider
