@@ -1,0 +1,9 @@
+example-rds:
+  serviceName: "example-service"
+  region: "eu-west-1"
+  instanceClass: "db.t12.micro"
+  username: "user"
+  passwordSecretName: "rds-secret"
+  autoGeneratePassword: true
+  tags:
+    environment: "production"

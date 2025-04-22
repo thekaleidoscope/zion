@@ -44,3 +44,5 @@ Thumbs.db
 Chart.lock
 charts
 *.tgz
+
+helm_debug.yaml

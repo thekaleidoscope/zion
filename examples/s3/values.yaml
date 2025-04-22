@@ -1,0 +1,5 @@
+example-s3:
+  serviceName: "example-service"
+  region: "eu-west-2"
+  tags:
+    environment: "production"

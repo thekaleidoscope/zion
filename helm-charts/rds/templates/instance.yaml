@@ -1,0 +1,24 @@
+apiVersion: rds.aws.upbound.io/v1beta1
+kind: DBInstance
+metadata:
+  name: {{ .Values.serviceName }}-db
+spec:
+  forProvider:
+    region: {{ .Values.region }}
+    allocatedStorage: 20
+    engine: postgres
+    engineVersion: "14.1"
+    instanceClass: {{ .Values.instanceClass }}
+    username: {{ .Values.username }}
+    autoGeneratePassword: {{ default false .Values.autoGeneratePassword }}
+    passwordSecretRef:
+      namespace: {{ .Release.Namespace }}
+      name: {{ .Values.passwordSecretName }}
+      key: password
+    skipFinalSnapshotBeforeDeletion: true
+    tags:
+      {{- range $key, $val := .Values.tags }}
+      {{ $key }}: {{ $val | quote }}
+      {{- end }}
+  providerConfigRef:
+    name: aws-provider
