@@ -1,0 +1,12 @@
+apiVersion: zion.com/v1alpha1
+kind: BucketClaim
+metadata:
+  name: example-bucket
+spec:
+  serviceName: example
+  region: us-west-2
+  tags:
+    environment: production
+    team: devops
+  blockPublicAcls: true
+  blockPublicPolicy: true

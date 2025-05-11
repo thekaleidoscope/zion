@@ -1,0 +1,69 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: buckets.zion.com
+  labels:
+    provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: zion.com/v1alpha1
+    kind: Bucket
+  resources:
+    - name: bucket
+      base:
+        apiVersion: s3.aws.upbound.io/v1beta2
+        kind: Bucket
+        spec:
+          forProvider:
+            bucket: "{{ .spec.serviceName }}-bucket"
+            region: "{{ .spec.region }}"
+            objectLockEnabled: true
+            tags:
+              {{- range $key, $val := .spec.tags }}
+                {{ $key }}: {{ $val | quote }}
+                {{- end }}
+          providerConfigRef:
+            name: aws-provider
+    - name: bucket-acl
+      base:
+        apiVersion: s3.aws.upbound.io/v1beta2
+        kind: BucketACL
+        spec:
+          forProvider:
+            acl: private
+            region: "{{ .spec.region }}"
+            bucketSelector:
+              matchLabels:
+                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+          providerConfigRef:
+            name: aws-provider
+    - name: bucket-logging
+      base:
+        apiVersion: s3.aws.upbound.io/v1beta2
+        kind: BucketLogging
+        spec:
+          forProvider:
+            region: "{{ .spec.region }}"
+            bucketSelector:
+              matchLabels:
+                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+            targetBucketSelector:
+              matchLabels:
+                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+            targetPrefix: log/
+          providerConfigRef:
+            name: aws-provider
+    - name: bucket-public-access-block
+      base:
+        apiVersion: s3.aws.upbound.io/v1beta1
+        kind: BucketPublicAccessBlock
+        spec:
+          forProvider:
+            region: "{{ .spec.region }}"
+            blockPublicAcls: "{{ .spec.blockPublicAcls }}"
+            blockPublicPolicy: "{{ .spec.blockPublicPolicy }}"
+            bucketSelector:
+              matchLabels:
+                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+          providerConfigRef:
+            name: aws-provider
