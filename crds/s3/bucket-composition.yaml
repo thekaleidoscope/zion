@@ -13,17 +13,35 @@ spec:
       base:
         apiVersion: s3.aws.upbound.io/v1beta2
         kind: Bucket
+        metadata:
+          labels:
+            crossplane.io/claim-name: bucket
         spec:
           forProvider:
-            bucket: "{{ .spec.serviceName }}-bucket"
-            region: "{{ .spec.region }}"
+            bucket: ""  # Patched below
+            region: ""  # Patched below
             objectLockEnabled: true
-            tags:
-              {{- range $key, $val := .spec.tags }}
-                {{ $key }}: {{ $val | quote }}
-                {{- end }}
+            tags: {}    # Patched below
           providerConfigRef:
             name: aws-provider
+      patches:
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "spec.forProvider.bucket"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.region"
+        - fromFieldPath: "spec.tags"
+          toFieldPath: "spec.forProvider.tags"
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "metadata.labels.testing.upbound.io/example-name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+
     - name: bucket-acl
       base:
         apiVersion: s3.aws.upbound.io/v1beta2
@@ -31,39 +49,78 @@ spec:
         spec:
           forProvider:
             acl: private
-            region: "{{ .spec.region }}"
+            region: ""
             bucketSelector:
               matchLabels:
-                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+                testing.upbound.io/example-name: ""
           providerConfigRef:
             name: aws-provider
+      patches:
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.region"
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "spec.forProvider.bucketSelector.matchLabels.testing.upbound.io/example-name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+
     - name: bucket-logging
       base:
         apiVersion: s3.aws.upbound.io/v1beta2
         kind: BucketLogging
         spec:
           forProvider:
-            region: "{{ .spec.region }}"
+            region: ""
+            targetPrefix: log/
             bucketSelector:
               matchLabels:
-                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+                testing.upbound.io/example-name: ""
             targetBucketSelector:
               matchLabels:
-                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
-            targetPrefix: log/
+                testing.upbound.io/example-name: ""
           providerConfigRef:
             name: aws-provider
+      patches:
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.region"
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "spec.forProvider.bucketSelector.matchLabels.testing.upbound.io/example-name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "spec.forProvider.targetBucketSelector.matchLabels.testing.upbound.io/example-name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+
     - name: bucket-public-access-block
       base:
         apiVersion: s3.aws.upbound.io/v1beta1
         kind: BucketPublicAccessBlock
         spec:
           forProvider:
-            region: "{{ .spec.region }}"
-            blockPublicAcls: "{{ .spec.blockPublicAcls }}"
-            blockPublicPolicy: "{{ .spec.blockPublicPolicy }}"
+            region: ""
+            blockPublicAcls: true
+            blockPublicPolicy: true
             bucketSelector:
               matchLabels:
-                testing.upbound.io/example-name: "{{ .spec.serviceName }}-bucket"
+                testing.upbound.io/example-name: ""
           providerConfigRef:
             name: aws-provider
+      patches:
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.region"
+        - fromFieldPath: "spec.blockPublicAcls"
+          toFieldPath: "spec.forProvider.blockPublicAcls"
+        - fromFieldPath: "spec.blockPublicPolicy"
+          toFieldPath: "spec.forProvider.blockPublicPolicy"
+        - fromFieldPath: "spec.serviceName"
+          toFieldPath: "spec.forProvider.bucketSelector.matchLabels.testing.upbound.io/example-name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
